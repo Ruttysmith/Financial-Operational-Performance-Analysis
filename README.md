@@ -177,6 +177,86 @@ Missing tax amounts were replaced with zero for the transaction value calculatio
 - Prepared financial values for aggregation.
 - Created classifications to identify missing supplier IDs and invoice records.
 
+### Multi-Currency Conversion Using Power Query
+
+One of the major data preparation challenges was the presence of multiple currencies in the transaction dataset, including Nigerian Naira (NGN), US Dollars (USD), British Pounds (GBP), and Euros (EUR).
+
+To ensure consistent financial reporting and meaningful comparisons across branches, transaction types, and payment methods, I created a separate currency lookup table in Power Query to standardize all financial values to Nigerian Naira (NGN).
+
+Rather than replacing the original financial columns, I preserved the original transaction values and created additional NGN-converted columns. This maintained the original transaction information while providing standardized financial values for analysis.
+
+**Step 1: Created a Currency Lookup Table**
+
+I created a reference table containing the currency codes and their corresponding exchange rates against the Nigerian Naira.
+
+| Currency | FX_Rate_NGN |
+|---|---:|
+| NGN | 1 |
+| USD | 1,332 |
+| EUR | 1,530 |
+| GBP | 1,700 |
+
+**Step 2: Merged the Lookup Table with the Fact Transactions Table**
+
+Using Power Query's Merge Queries functionality, I merged the currency lookup table with the main Fact Transactions table using the Currency column as the matching key.
+
+Since the Currency column already existed in the Fact Transactions table, I expanded only the `FX_Rate_NGN` column from the lookup table.
+
+This introduced the applicable exchange rate into each transaction record without duplicating the existing currency column.
+
+**Step 3: Created Additional NGN-Converted Columns**
+
+Using Power Query's Add Column → Custom Column feature, I created the following calculated columns:
+
+**1. Currency_Clean**
+
+A standardized currency field used to ensure consistent currency codes for matching against the lookup table.
+
+**2. FX_Rate_NGN**
+
+The exchange rate retrieved from the currency lookup table after merging.
+
+**3. Amount_NGN**
+
+Converted the original transaction amount into Nigerian Naira.
+
+```powerquery
+[Amount] * [FX_Rate_NGN]
+```
+
+**4. Tax_Amount_NGN**
+
+Converted the cleaned tax amount into Nigerian Naira.
+
+```powerquery
+[Tax_Amount_Clean] * [FX_Rate_NGN]
+```
+
+**5. Total_Transaction_Value_NGN**
+
+Calculated the total transaction value in Nigerian Naira by adding the converted transaction amount and converted tax amount.
+
+```powerquery
+[Amount_NGN] + [Tax_Amount_NGN]
+```
+
+**Step 4: Preserved the Original Financial Columns**
+
+The original `Amount`, `Tax_Amount`, and `Total_Transaction_Value` columns were retained.
+
+The additional NGN columns were created separately to preserve the source currency values and provide a clear distinction between original financial records and standardized reporting values.
+
+**Business Value of the Currency Conversion Process**
+
+- Standardized transactions recorded in different currencies into a common reporting currency.
+- Enabled consistent aggregation of financial values across branches and transaction categories.
+- Improved the accuracy and comparability of financial KPIs.
+- Preserved original transaction amounts and tax values for traceability.
+- Created a reusable Power Query lookup table for currency conversion.
+- Provided a consistent NGN reporting basis for the financial dashboards.
+
+This transformation was an important part of preparing the dataset for financial analysis and dashboard development.
+
 ### Financial Data Preparation
 Prepared transaction amounts in Nigerian Naira using the currency conversion assumptions applied in the project.
 
